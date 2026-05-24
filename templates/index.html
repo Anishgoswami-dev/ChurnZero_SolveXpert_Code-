@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ChurnZero | Intelligent Retention Dashboard</title>
+    <meta name="description" content="ChurnZero ML Dashboard – Visualize customer churn predictions, model performance, and business cost optimization." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+        /* ======= CSS RESET & DESIGN TOKENS ======= */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg-primary:   #0F172A;
+            --bg-card:      #1E293B;
+            --bg-card-alt:  #334155;
+            --accent-navy:  #1D3557;
+            --accent-coral: #E63946;
+            --accent-teal:  #10B981;
+            --accent-amber: #F59E0B;
+            --text-primary: #F8FAFC;
+            --text-secondary: #94A3B8;
+            --text-muted:   #64748B;
+            --border:       #334155;
+            --shadow:       0 4px 24px rgba(0,0,0,.35);
+            --radius:       12px;
+            --radius-sm:    8px;
+            --transition:   .25s cubic-bezier(.4,0,.2,1);
+            --font:         'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: var(--font);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* ======= NAVBAR ======= */
+        .navbar {
+            position: sticky; top: 0; z-index: 100;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 2rem;
+            height: 64px;
+            background: rgba(15,23,42,.85);
+            backdrop-filter: blur(16px) saturate(180%);
+            border-bottom: 1px solid var(--border);
+        }
+        .navbar .brand {
+            display: flex; align-items: center; gap: .6rem;
+            font-size: 1.15rem; font-weight: 700; letter-spacing: -.02em;
+        }
+        .navbar .brand .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent-teal); box-shadow: 0 0 8px var(--accent-teal); }
+        .navbar .nav-links { display: flex; gap: 1.5rem; }
+        .navbar .nav-links a {
+            color: var(--text-secondary); text-decoration: none;
+            font-size: .85rem; font-weight: 500;
+            transition: color var(--transition);
+        }
+        .navbar .nav-links a:hover { color: var(--text-primary); }
+        .badge-live {
+            display: inline-flex; align-items: center; gap: .35rem;
+            padding: .2rem .6rem; border-radius: 999px;
+            background: rgba(16,185,129,.15); color: var(--accent-teal);
+            font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em;
+        }
+        .badge-live::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-teal); animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+
+        /* ======= HERO ======= */
+        .hero {
+            position: relative; overflow: hidden;
+            padding: 3.5rem 2rem 2.5rem;
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #0F172A 100%);
+        }
+        .hero::before {
+            content: ''; position: absolute; top: -50%; right: -20%;
+            width: 600px; height: 600px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(16,185,129,.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .hero h1 { font-size: 2.2rem; font-weight: 800; letter-spacing: -.03em; line-height: 1.2; }
+        .hero h1 span { background: linear-gradient(90deg, var(--accent-teal), #6EE7B7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero p { margin-top: .6rem; color: var(--text-secondary); max-width: 580px; font-size: .95rem; }
+
+        /* ======= LAYOUT ======= */
+        .container { max-width: 1320px; margin: 0 auto; padding: 0 1.5rem; }
+        .section { padding: 2rem 0; }
+        .section-title {
+            font-size: 1.1rem; font-weight: 700; margin-bottom: 1.2rem;
+            display: flex; align-items: center; gap: .5rem;
+        }
+        .section-title .icon { font-size: 1.2rem; }
+
+        /* ======= METRIC CARDS GRID ======= */
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+        }
+        .metric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.3rem 1.4rem;
+            transition: transform var(--transition), box-shadow var(--transition);
+            position: relative; overflow: hidden;
+        }
+        .metric-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+        .metric-card .label { font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); }
+        .metric-card .value { font-size: 1.7rem; font-weight: 800; margin-top: .25rem; letter-spacing: -.02em; }
+        .metric-card .sub { font-size: .78rem; color: var(--text-secondary); margin-top: .15rem; }
+        .metric-card.teal .value { color: var(--accent-teal); }
+        .metric-card.coral .value { color: var(--accent-coral); }
+        .metric-card.amber .value { color: var(--accent-amber); }
+        .metric-card.navy .value { color: #60A5FA; }
+        .metric-card::after {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: var(--border);
+        }
+        .metric-card.teal::after { background: var(--accent-teal); }
+        .metric-card.coral::after { background: var(--accent-coral); }
+        .metric-card.amber::after { background: var(--accent-amber); }
+        .metric-card.navy::after { background: #60A5FA; }
+
+        /* ======= CHART CARDS ======= */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+            gap: 1.2rem;
+        }
+        .chart-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.2rem;
+            display: flex; flex-direction: column; align-items: center;
+            transition: transform var(--transition), box-shadow var(--transition);
+        }
+        .chart-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+        .chart-card img { width: 100%; max-width: 520px; border-radius: var(--radius-sm); }
+        .chart-card .chart-title {
+            font-size: .82rem; font-weight: 600; color: var(--text-secondary);
+            text-transform: uppercase; letter-spacing: .04em; margin-bottom: .8rem; align-self: flex-start;
+        }
+
+        /* ======= TABLE ======= */
+        .table-wrapper {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+        .table-toolbar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1rem 1.2rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .table-toolbar h3 { font-size: .9rem; font-weight: 600; }
+        .table-toolbar .info { font-size: .75rem; color: var(--text-muted); }
+        table { width: 100%; border-collapse: collapse; }
+        thead th {
+            padding: .7rem 1rem; text-align: left;
+            font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+            color: var(--text-muted); border-bottom: 1px solid var(--border);
+            background: rgba(15,23,42,.5);
+            position: sticky; top: 0;
+        }
+        tbody tr { transition: background var(--transition); }
+        tbody tr:hover { background: rgba(51,65,85,.4); }
+        tbody td { padding: .6rem 1rem; font-size: .82rem; border-bottom: 1px solid rgba(51,65,85,.5); }
+        .scroll-table { max-height: 420px; overflow-y: auto; }
+        .scroll-table::-webkit-scrollbar { width: 6px; }
+        .scroll-table::-webkit-scrollbar-track { background: var(--bg-card); }
+        .scroll-table::-webkit-scrollbar-thumb { background: var(--bg-card-alt); border-radius: 3px; }
+
+        .chip {
+            display: inline-block; padding: .15rem .5rem; border-radius: 999px;
+            font-size: .7rem; font-weight: 600;
+        }
+        .chip-active { background: rgba(16,185,129,.15); color: var(--accent-teal); }
+        .chip-churn { background: rgba(230,57,70,.15); color: var(--accent-coral); }
+
+        .prob-bar {
+            display: inline-block; height: 6px; border-radius: 3px;
+            min-width: 8px; max-width: 80px;
+        }
+
+        /* ======= INSIGHT CARDS ======= */
+        .insight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+        .insight-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 1.3rem 1.4rem;
+            border-left: 3px solid var(--accent-teal);
+            transition: transform var(--transition);
+        }
+        .insight-card:hover { transform: translateY(-2px); }
+        .insight-card h4 { font-size: .85rem; font-weight: 700; margin-bottom: .4rem; }
+        .insight-card p { font-size: .8rem; color: var(--text-secondary); line-height: 1.55; }
+        .insight-card:nth-child(2) { border-left-color: var(--accent-coral); }
+        .insight-card:nth-child(3) { border-left-color: var(--accent-amber); }
+        .insight-card:nth-child(4) { border-left-color: #60A5FA; }
+
+        /* ======= FOOTER ======= */
+        footer {
+            margin-top: 2rem; padding: 1.5rem 2rem;
+            border-top: 1px solid var(--border);
+            text-align: center; font-size: .75rem; color: var(--text-muted);
+        }
+
+        /* ======= LOADING ======= */
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-card-alt) 25%, var(--bg-card) 50%, var(--bg-card-alt) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: var(--radius-sm);
+        }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .skeleton-metric { height: 110px; }
+        .skeleton-chart { height: 300px; }
+
+        /* ======= RESPONSIVE ======= */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 1.5rem; }
+            .chart-grid { grid-template-columns: 1fr; }
+            .metric-grid { grid-template-columns: repeat(2, 1fr); }
+            .navbar { padding: 0 1rem; }
+            .navbar .nav-links { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+    <div class="brand"><span class="dot"></span> ChurnZero</div>
+    <div class="nav-links">
+        <a href="#metrics">Metrics</a>
+        <a href="#charts">Analytics</a>
+        <a href="#predictions">Predictions</a>
+        <a href="#insights">Insights</a>
+    </div>
+    <span class="badge-live">Live</span>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+    <div class="container">
+        <h1>Intelligent <span>Retention</span> Dashboard</h1>
+        <p>Real-time visualization of churn predictions, model performance metrics, and business cost optimization powered by XGBoost.</p>
+    </div>
+</header>
+
+<!-- METRICS -->
+<section class="section" id="metrics">
+    <div class="container">
+        <div class="section-title"><span class="icon">&#x1F4CA;</span> Key Performance Indicators</div>
+        <div class="metric-grid" id="metric-grid">
+            <div class="metric-card skeleton skeleton-metric"></div>
+            <div class="metric-card skeleton skeleton-metric"></div>
+            <div class="metric-card skeleton skeleton-metric"></div>
+            <div class="metric-card skeleton skeleton-metric"></div>
+            <div class="metric-card skeleton skeleton-metric"></div>
+            <div class="metric-card skeleton skeleton-metric"></div>
+        </div>
+    </div>
+</section>
+
+<!-- CHARTS -->
+<section class="section" id="charts">
+    <div class="container">
+        <div class="section-title"><span class="icon">&#x1F4C8;</span> Analytical Charts</div>
+        <div class="chart-grid" id="chart-grid">
+            <div class="chart-card skeleton skeleton-chart"></div>
+            <div class="chart-card skeleton skeleton-chart"></div>
+            <div class="chart-card skeleton skeleton-chart"></div>
+            <div class="chart-card skeleton skeleton-chart"></div>
+            <div class="chart-card skeleton skeleton-chart"></div>
+        </div>
+    </div>
+</section>
+
+<!-- PREDICTIONS TABLE -->
+<section class="section" id="predictions">
+    <div class="container">
+        <div class="section-title"><span class="icon">&#x1F4CB;</span> Test Set Predictions (First 100)</div>
+        <div class="table-wrapper">
+            <div class="table-toolbar">
+                <h3>ChurnZero_Antigravity_Predictions.csv</h3>
+                <span class="info" id="table-info">Loading...</span>
+            </div>
+            <div class="scroll-table">
+                <table>
+                    <thead><tr><th>#</th><th>Customer ID</th><th>Prediction</th><th>Probability</th><th>Risk Level</th></tr></thead>
+                    <tbody id="pred-tbody"><tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-muted);">Loading predictions...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- INSIGHTS -->
+<section class="section" id="insights">
+    <div class="container">
+        <div class="section-title"><span class="icon">&#x1F4A1;</span> Strategic Recommendations</div>
+        <div class="insight-grid">
+            <div class="insight-card">
+                <h4>1. Zero-Complaint SLA</h4>
+                <p>With unresolved complaints accounting for 24% of churn decisions, implement automated escalation for high-risk flagged customers with open tickets to a senior resolution desk.</p>
+            </div>
+            <div class="insight-card">
+                <h4>2. Balance Decline Alerts</h4>
+                <p>For accounts showing &gt;15% balance decline, trigger automated higher-yield FD campaigns or cashback bonuses on recurring savings transfers.</p>
+            </div>
+            <div class="insight-card">
+                <h4>3. Digital Re-engagement</h4>
+                <p>Deploy push notifications and personalized reward points for customers whose digital logins drop below baseline averages to prevent disengagement.</p>
+            </div>
+            <div class="insight-card">
+                <h4>4. RM Outreach Protocol</h4>
+                <p>Assign relationship managers to conduct direct feedback sessions with high-value accounts experiencing elevated escalation counts to defuse friction.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <p>ChurnZero &mdash; Team Antigravity | Powered by XGBoost &bull; Flask &bull; Python</p>
+</footer>
+
+<script>
+// ============= FETCH & RENDER =============
+
+async function loadSummary() {
+    const res = await fetch('/api/summary');
+    const d = await res.json();
+
+    document.getElementById('metric-grid').innerHTML = `
+        <div class="metric-card teal">
+            <div class="label">PR-AUC (Primary)</div>
+            <div class="value">${d.pr_auc}</div>
+            <div class="sub">5-Fold Stratified CV</div>
+        </div>
+        <div class="metric-card navy">
+            <div class="label">F1-Score (Optimized)</div>
+            <div class="value">${d.f1_optimized}</div>
+            <div class="sub">Threshold = ${d.threshold}</div>
+        </div>
+        <div class="metric-card coral">
+            <div class="label">Business Cost Savings</div>
+            <div class="value">${d.cost_savings_pct}</div>
+            <div class="sub">${d.cost_default} &rarr; ${d.cost_optimized}</div>
+        </div>
+        <div class="metric-card amber">
+            <div class="label">Primary Churn Driver</div>
+            <div class="value" style="font-size:1.1rem;">${d.top_driver}</div>
+            <div class="sub">XGBoost Feature Importance</div>
+        </div>
+        <div class="metric-card teal">
+            <div class="label">Predicted Churners</div>
+            <div class="value">${d.pred_churners}</div>
+            <div class="sub">${d.churn_rate_pred} of ${d.pred_rows} test customers</div>
+        </div>
+        <div class="metric-card navy">
+            <div class="label">Training Portfolio</div>
+            <div class="value">${d.train_rows.toLocaleString()}</div>
+            <div class="sub">${d.train_features} features &bull; ${d.churn_rate_train} churn rate</div>
+        </div>
+    `;
+}
+
+async function loadCharts() {
+    const res = await fetch('/api/charts');
+    const c = await res.json();
+
+    const titles = ['Training Class Distribution', 'Predicted Distribution', 'Probability Histogram', 'Top Churn Drivers', 'Cost Comparison'];
+    const keys = ['class_dist', 'pred_dist', 'prob_hist', 'feature_imp', 'cost_compare'];
+
+    document.getElementById('chart-grid').innerHTML = keys.map((k, i) => `
+        <div class="chart-card">
+            <div class="chart-title">${titles[i]}</div>
+            <img src="data:image/png;base64,${c[k]}" alt="${titles[i]}" />
+        </div>
+    `).join('');
+}
+
+async function loadPredictions() {
+    const res = await fetch('/api/predictions');
+    const rows = await res.json();
+
+    document.getElementById('table-info').textContent = `Showing ${rows.length} of 2,026 rows`;
+
+    document.getElementById('pred-tbody').innerHTML = rows.map((r, i) => {
+        const isChurn = r.churn_prediction === 1;
+        const prob = r.churn_probability;
+        const pct = (prob * 100).toFixed(2);
+        const barW = Math.max(8, Math.min(80, prob * 80));
+        const barColor = prob > 0.5 ? '#E63946' : prob > 0.031 ? '#F59E0B' : '#10B981';
+        const risk = prob > 0.5 ? 'High' : prob > 0.1 ? 'Medium' : prob > 0.031 ? 'Low' : 'Minimal';
+        const riskColor = prob > 0.5 ? '#E63946' : prob > 0.1 ? '#F59E0B' : prob > 0.031 ? '#60A5FA' : '#10B981';
+        return `<tr>
+            <td style="color:var(--text-muted)">${i + 1}</td>
+            <td style="font-family:monospace;font-size:.78rem">${r.customer_id}</td>
+            <td>${isChurn
+                ? '<span class="chip chip-churn">Churn</span>'
+                : '<span class="chip chip-active">Active</span>'
+            }</td>
+            <td>
+                <span style="display:inline-flex;align-items:center;gap:.5rem">
+                    <span class="prob-bar" style="width:${barW}px;background:${barColor}"></span>
+                    <span style="font-size:.78rem;color:var(--text-secondary)">${pct}%</span>
+                </span>
+            </td>
+            <td style="color:${riskColor};font-weight:600;font-size:.78rem">${risk}</td>
+        </tr>`;
+    }).join('');
+}
+
+// Load all sections
+Promise.all([loadSummary(), loadCharts(), loadPredictions()]);
+</script>
+</body>
+</html>
