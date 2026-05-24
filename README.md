@@ -75,7 +75,7 @@ The model is evaluated using:
 
 ### 1️⃣ Clone the Repository
 
-git clone [https://github.com/your-username/churn-prediction.git](https://github.com/Anishgoswami-dev/ChurnZero_SolveXpert_Code-.git)
+git clone https://github.com/Anishgoswami-dev/ChurnZero_SolveXpert_Code-.git
 cd churn-prediction
 2️⃣ Install Dependencies
 pip install -r requirements.txt
